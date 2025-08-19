@@ -1,0 +1,107 @@
+<div class="container mt-4">
+    <h1>Results for {{ start_date }} to {{ end_date }}</h1>
+    
+    <div class="results-section">
+        <h2>Total New Subscribers: {{ total_subscribers }}</h2>
+        
+        <!-- Main progress bar -->
+        <div class="progress mb-4" style="height: 25px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+        </div>
+
+        <!-- Individual source bars -->
+        {% for source, count in source_counts.items() %}
+            <div class="source-row mb-3">
+                <p>{{ source }}: {{ count }} ({{ percentages[source] }}%)</p>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ percentages[source] }}%"></div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Daily Counts Section -->
+        {% if daily_counts %}
+        <div class="daily-counts-section mt-5">
+            <h2>Daily Subscriber Breakdown</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>New Subscribers</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for date, count in daily_counts.items() %}
+                        <tr>
+                            <td>{{ date }}</td>
+                            <td>{{ count }}</td>
+                            <td>{{ (count / total_subscribers * 100)|round(1) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Paperboy section -->
+        {% if paperboy_start %}
+        <div class="paperboy-section mt-5">
+            <h2>Paperboy Performance (Since {{ paperboy_start }})</h2>
+            
+            <h3>Total New Subscribers: {{ total_subscribers }}</h3>
+            <div class="progress mb-4" style="height: 25px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+            </div>
+
+            <h4>Paperboy Attribution:</h4>
+            <p>Total Paperboy Subscribers: {{ paperboy_total }} ({{ paperboy_percentage }}%)</p>
+            <div class="progress mb-3" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {{ paperboy_percentage }}%"></div>
+            </div>
+
+            {% for source, count in paperboy_sources.items() %}
+                <p>- {{ source }}: {{ count }} ({{ paperboy_source_percentages[source] }}%)</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="/" class="btn btn-success">New Search</a>
+            <button onclick="window.print()" class="btn btn-success">Print Results</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress {
+    background-color: #f0f0f0;
+    border-radius: 4px;
+}
+
+.source-row p {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.paperboy-section, .daily-counts-section {
+    border-top: 1px solid #ddd;
+    padding-top: 2rem;
+}
+
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+@media print {
+    .btn {
+        display: none;
+    }
+}
+</style>
+

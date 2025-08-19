@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ConvertKit Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css', v=1) }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>ConvertKit Analytics</h1>
+            {% if 'api_key' in session %}
+                <div class="d-flex align-items-center gap-4">
+                    <!-- Client Info -->
+                    <div class="d-flex align-items-center">
+                        {% if client_data and client_data.get('image_url') %}
+                            <img src="{{ client_data.get('image_url') }}" 
+                                 alt="{{ selected_client }}" 
+                                 class="rounded-circle me-2"
+                                 style="width: 40px; height: 40px; object-fit: cover;">
+                        {% endif %}
+                        <span class="fw-bold">{{ selected_client }}</span>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('oauth_authorize') }}" class="btn btn-outline-primary">
+                            Switch Client
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-dark logout-btn">
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center">
+                    <a href="{{ url_for('oauth_authorize') }}" class="btn btn-primary btn-lg">
+                        Connect with ConvertKit
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if 'api_key' not in session %}
+            <div class="text-center">
+                <a href="{{ url_for('oauth_authorize') }}" class="btn btn-primary btn-lg">
+                    Connect with ConvertKit
+                </a>
+            </div>
+        {% else %}
+            <form method="POST" class="mb-4">
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="start_date">Start Date:</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ default_start_date }}" required>
+                    </div>
+                    <div class="col">
+                        <label for="end_date">End Date:</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ default_end_date }}" required>
+                    </div>
+                    <div class="col">
+                        <label for="current_total">Current Total Subscribers:</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="current_total" 
+                               name="current_total" 
+                               value="{{ current_total }}" 
+                               required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="facebook_tag">Facebook Ads Tag:</label>
+                            <select name="facebook_tag" id="facebook_tag" class="form-control">
+                                <option value="">Select Facebook Tag</option>
+                                {% for tag in tags %}
+                                <option value="{{ tag.id }}">{{ tag.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="creator_tag">Creator Network Tag:</label>
+                            <select name="creator_tag" id="creator_tag" class="form-control">
+                                <option value="">Select Creator Tag</option>
+                                {% for tag in tags %}
+                                <option value="{{ tag.id }}">{{ tag.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="sparkloop_tag">Sparkloop Tag:</label>
+                            <select name="sparkloop_tag" id="sparkloop_tag" class="form-control">
+                                <option value="">Select Sparkloop Tag</option>
+                                {% for tag in tags %}
+                                <option value="{{ tag.id }}">{{ tag.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Generate Report</button>
+            </form>
+
+            {% if results %}
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h2 class="section-title">Recent Data</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="text-muted">{{ results.start_date }} to {{ results.end_date }}</p>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Total Subscribers
+                                    <span class="badge bg-primary rounded-pill">{{ results.total_subscribers }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Facebook Ads Subscribers
+                                    <span class="badge bg-primary rounded-pill">{{ results.facebook_subscribers }} ({{ results.facebook_percent }}%)</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Creator Network Subscribers
+                                    <span class="badge bg-primary rounded-pill">{{ results.creator_subscribers }} ({{ results.creator_percent }}%)</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Sparkloop Subscribers
+                                    <span class="badge bg-primary rounded-pill">{{ results.sparkloop_subscribers }} ({{ results.sparkloop_percent }}%)</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Organic Subscribers
+                                    <span class="badge bg-primary rounded-pill">{{ results.organic_subscribers }} ({{ results.organic_percent }}%)</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Percentage from Paid Growth
+                                    <span class="badge bg-primary rounded-pill">{{ results.paid_growth_percent }}%</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h2 class="section-title">Growth Metrics</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-2">Total Growth Since Paperboy</label>
+                                    <h3 class="display-4 mb-1">{{ results.total_growth }}</h3>
+                                    <small class="metric-date">Since {{ results.paperboy_start_date }}</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-2">Growth Rate</label>
+                                    <h3 class="display-4 mb-1">{{ results.growth_rate }}%</h3>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-2">Daily Average Before Paperboy</label>
+                                    <h3 class="display-4 mb-1">{{ results.daily_average_before }}</h3>
+                                    <small class="metric-date">{{ results.before_period }}</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-2">Daily Average After Paperboy</label>
+                                    <h3 class="display-4 mb-1">{{ results.daily_average_after }}</h3>
+                                    <small class="metric-date">{{ results.after_period }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if selected_client and (not client_data or not client_data.get('paperboy_start_date')) %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3>Initial Setup for {{ selected_client }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col">
+                                <label for="paperboy_start_date">Paperboy Start Date:</label>
+                                <input type="date" name="paperboy_start_date" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label for="initial_subscriber_count">Initial Subscriber Count:</label>
+                                <input type="number" name="initial_subscriber_count" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Save Client Data</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if client_data %}
+                <!-- Your existing analytics form and display code -->
+            {% endif %}
+
+            <!-- Monthly Growth section -->
+            {% if results and results.monthly_growth %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h2 class="section-title">Monthly Growth</h2>
+                    <!-- Add toggle buttons -->
+                    <div class="d-flex justify-content-end mb-3">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-primary active" id="tableViewBtn">Table View</button>
+                            <button class="btn btn-outline-primary" id="chartViewBtn">Chart View</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Chart View (hidden by default) -->
+                            <div id="chartView" style="display: none;">
+                                <canvas id="growthChart"></canvas>
+                            </div>
+                            
+                            <!-- Table View -->
+                            <div id="tableView" class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Total Subscribers</th>
+                                            <th>Period</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for month in results.monthly_growth %}
+                                        <tr>
+                                            <td>{{ month.date }}</td>
+                                            <td>{{ "{:,}".format(month.count) }}</td>
+                                            <td>
+                                                {% if month.is_paperboy %}
+                                                <span class="badge bg-primary">After Paperboy</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Before Paperboy</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded');
+            populateTags();
+        });
+    </script>
+    {% if results and results.monthly_growth %}
+    <script>
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        const growthData = {{ results.monthly_growth | tojson }};
+        const labels = growthData.map(data => data.date);
+        const dataPoints = growthData.map(data => data.count);
+        const paperboyIndex = growthData.findIndex(data => data.is_paperboy);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Subscribers',
+                    data: dataPoints,
+                    borderColor: '#0d6efd',
+                    backgroundColor: '#0d6efd',
+                    pointBackgroundColor: '#0d6efd',
+                    pointBorderColor: '#0d6efd',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 4,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#0d6efd',
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        grid: {
+                            display: true,
+                            drawBorder: true
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Subscribers'
+                        },
+                        grid: {
+                            display: true,
+                            drawBorder: true
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    {% endif %}
+    <!-- Add the toggle functionality script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableViewBtn = document.getElementById('tableViewBtn');
+        const chartViewBtn = document.getElementById('chartViewBtn');
+        const tableView = document.getElementById('tableView');
+        const chartView = document.getElementById('chartView');
+
+        tableViewBtn.addEventListener('click', () => {
+            tableView.style.display = 'block';
+            chartView.style.display = 'none';
+            tableViewBtn.classList.add('active');
+            chartViewBtn.classList.remove('active');
+        });
+
+        chartViewBtn.addEventListener('click', () => {
+            tableView.style.display = 'none';
+            chartView.style.display = 'block';
+            chartViewBtn.classList.add('active');
+            tableViewBtn.classList.remove('active');
+        });
+    });
+    </script>
+</body>
+</html>

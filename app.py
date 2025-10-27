@@ -22,6 +22,8 @@ from requests_oauthlib import OAuth2Session
 # Import our new services
 from services.convertkit_service import ConvertKitService
 from services.report_service import ReportService
+from services.open_rate_service import OpenRateService
+from services.background_tasks import BackgroundTask
 from utils.date_utils import get_default_date_range
 
 # Configuration
@@ -171,17 +173,35 @@ def index():
                 creator_tag = int(creator_tag) if creator_tag else None
                 sparkloop_tag = int(sparkloop_tag) if sparkloop_tag else None
 
-                # Generate report (with or without open rates)
+                # Generate basic report (always fast)
+                results = report_service.generate_subscriber_report(
+                    facebook_tag, creator_tag, sparkloop_tag,
+                    start_date, end_date, current_total, CLIENT_DATA.get(client_name)
+                )
+
+                # If open rates requested, start background task
+                task_id = None
                 if include_open_rates:
-                    results = report_service.generate_report_with_open_rates(
-                        facebook_tag, creator_tag, sparkloop_tag,
-                        start_date, end_date, current_total, CLIENT_DATA.get(client_name)
+                    tags_to_analyze = []
+                    if facebook_tag:
+                        tags_to_analyze.append({'id': facebook_tag, 'name': 'Facebook Ads'})
+                    if creator_tag:
+                        tags_to_analyze.append({'id': creator_tag, 'name': 'Creator Network'})
+                    if sparkloop_tag:
+                        tags_to_analyze.append({'id': sparkloop_tag, 'name': 'SparkLoop'})
+
+                    # Start background task
+                    task_id = BackgroundTask.generate_task_id(client_name)
+                    BackgroundTask.save_task_status(task_id, 'pending')
+
+                    open_rate_service = OpenRateService(ck_service)
+                    BackgroundTask.run_open_rate_calculation(
+                        task_id, ck_service, open_rate_service,
+                        start_date, end_date, tags_to_analyze
                     )
-                else:
-                    results = report_service.generate_subscriber_report(
-                        facebook_tag, creator_tag, sparkloop_tag,
-                        start_date, end_date, current_total, CLIENT_DATA.get(client_name)
-                    )
+
+                    flash(f'Open rates calculation started in background. Task ID: {task_id}. Refresh page to check status.', 'info')
+                    results['open_rates_task_id'] = task_id
 
                 return render_template('index.html',
                                      client_name=client_name,
@@ -305,6 +325,16 @@ def logout():
     print("=== Logout Route ===")
     session.clear()
     return redirect(url_for('oauth_authorize'))
+
+
+@app.route('/task_status/<task_id>')
+@token_required
+def task_status(task_id):
+    """API endpoint to check task status."""
+    status = BackgroundTask.get_task_status(task_id)
+    if not status:
+        return jsonify({'error': 'Task not found'}), 404
+    return jsonify(status)
 
 
 @app.route('/get_tags')

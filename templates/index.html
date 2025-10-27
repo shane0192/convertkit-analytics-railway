@@ -190,6 +190,30 @@
                 </div>
             </div>
 
+            <!-- Open Rates Task Status -->
+            {% if results and results.get('open_rates_task_id') %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h2 class="section-title">Email Open Rates</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <h5>⏳ Open Rates Calculation In Progress</h5>
+                                <p>The open rates calculation is running in the background. This may take 5-30 minutes depending on your list size.</p>
+                                <p class="mb-0"><strong>Task ID:</strong> {{ results.open_rates_task_id }}</p>
+                                <a href="{{ url_for('task_status', task_id=results.open_rates_task_id) }}" class="btn btn-sm btn-primary mt-2" target="_blank">
+                                    Check Status (JSON)
+                                </a>
+                                <button onclick="location.reload()" class="btn btn-sm btn-secondary mt-2">
+                                    Refresh Page
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Open Rates Section -->
             {% if results and results.get('open_rates') %}
             <div class="row mt-4">

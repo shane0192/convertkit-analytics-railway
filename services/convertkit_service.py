@@ -363,8 +363,9 @@ class ConvertKitService:
         params = {'per_page': PER_PAGE_PARAM}
 
         if filter_type:
-            params['subscriber_state'] = filter_type
-            print(f"DEBUG: Fetching broadcast {broadcast_id} subscribers with filter '{filter_type}'")
+            # Try different parameter names that Kit API might use
+            params['status'] = filter_type
+            print(f"DEBUG: Fetching broadcast {broadcast_id} subscribers with status filter '{filter_type}'")
 
         subscribers = []
 

@@ -315,8 +315,14 @@ def get_tags():
         return jsonify({'error': str(e)})
 
 
-# Initialize the app
-check_environment()
-
+# Initialize the app (only check environment when running directly, not when imported by gunicorn)
 if __name__ == '__main__':
+    check_environment()
     app.run(ssl_context='adhoc')
+else:
+    # When running under gunicorn, check environment but allow Railway's variables
+    try:
+        check_environment()
+    except EnvironmentError as e:
+        print(f"Warning: {e}")
+        print("Continuing with Railway environment variables...")

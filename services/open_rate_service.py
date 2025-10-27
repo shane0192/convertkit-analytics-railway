@@ -52,8 +52,8 @@ class OpenRateService:
                     print(f"SAMPLE STATS RESPONSE: {sample_stats}")
 
                 recipients = stats.get('recipients', 0)
-                # Try multiple possible field names for opens
-                opens = stats.get('opens', stats.get('unique_opens', stats.get('total_opens', 0)))
+                # Kit API v4 uses 'emails_opened' for the opens count
+                opens = stats.get('emails_opened', 0)
 
                 total_recipients += recipients
                 total_opens += opens

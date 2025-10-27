@@ -107,6 +107,17 @@
                     </div>
                 </div>
 
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="include_open_rates" value="true" id="includeOpenRates">
+                            <label class="form-check-label" for="includeOpenRates">
+                                Include Open Rates (may take longer for large lists)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Generate Report</button>
             </form>
 
@@ -178,6 +189,67 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Open Rates Section -->
+            {% if results and results.get('open_rates') %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h2 class="section-title">Email Open Rates</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="text-muted mb-4">
+                                {{ results.open_rates.date_range.start_date }} to {{ results.open_rates.date_range.end_date }}
+                            </p>
+
+                            <!-- Overall Open Rate -->
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <strong>Overall Open Rate:</strong>
+                                                <h3 class="mb-0">{{ results.open_rates.overall.average_open_rate }}%</h3>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Total Broadcasts:</strong>
+                                                <h5 class="mb-0">{{ results.open_rates.overall.total_broadcasts }}</h5>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Total Recipients:</strong>
+                                                <h5 class="mb-0">{{ results.open_rates.overall.total_recipients }}</h5>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Total Opens:</strong>
+                                                <h5 class="mb-0">{{ results.open_rates.overall.total_opens }}</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Open Rates by Tag -->
+                            <h5 class="mb-3">Open Rates by Source</h5>
+                            <div class="row">
+                                {% for tag_stat in results.open_rates.by_tag %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ tag_stat.tag_name }}</h6>
+                                            <h2 class="display-4 mb-2">{{ tag_stat.average_open_rate }}%</h2>
+                                            <ul class="list-unstyled small text-muted">
+                                                <li>Recipients: {{ tag_stat.total_recipients }}</li>
+                                                <li>Opens: {{ tag_stat.total_opens }}</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             {% endif %}
 
             {% if selected_client and (not client_data or not client_data.get('paperboy_start_date')) %}

@@ -4,11 +4,15 @@ Main Flask application with route handlers only.
 """
 import json
 import os
+import sys
 import random
 import string
 import traceback
 from datetime import timedelta
 from urllib.parse import urlencode
+
+# Add current directory to Python path for Railway deployment
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import requests
 from flask import (Flask, flash, redirect, render_template, request, session,

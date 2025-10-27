@@ -341,7 +341,9 @@ class ConvertKitService:
 
         response = self._rate_limited_request(url)
         if response.status_code == 200:
-            return response.json().get('broadcast', {}).get('stats', {})
+            stats = response.json().get('broadcast', {}).get('stats', {})
+            print(f"DEBUG: Broadcast {broadcast_id} stats: {stats}")
+            return stats
 
         print(f"Error getting broadcast stats: {response.text}")
         return None

@@ -80,22 +80,26 @@ class ReportService:
             print(f"Before period: {periods['before_start']} to {periods['before_end']}")
             print(f"After period: {periods['after_start']} to {periods['after_end']}")
 
+            # Temporarily disabled - causes timeout on large lists
             # Get subscribers for before/after periods (using count_only)
-            daily_average_before = round(
-                self.ck_service.get_subscribers(
-                    periods['before_start'],
-                    periods['before_end'],
-                    count_only=True
-                ) / periods['before_days'], 1
-            )
+            # daily_average_before = round(
+            #     self.ck_service.get_subscribers(
+            #         periods['before_start'],
+            #         periods['before_end'],
+            #         count_only=True
+            #     ) / periods['before_days'], 1
+            # )
+            #
+            # daily_average_after = round(
+            #     self.ck_service.get_subscribers(
+            #         periods['after_start'],
+            #         periods['after_end'],
+            #         count_only=True
+            #     ) / periods['after_days'], 1
+            # )
 
-            daily_average_after = round(
-                self.ck_service.get_subscribers(
-                    periods['after_start'],
-                    periods['after_end'],
-                    count_only=True
-                ) / periods['after_days'], 1
-            )
+            daily_average_before = 0  # Disabled to prevent timeout
+            daily_average_after = 0   # Disabled to prevent timeout
 
             # Calculate total growth since Paperboy
             total_growth = current_total - initial_count

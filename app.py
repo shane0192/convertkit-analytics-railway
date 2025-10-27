@@ -182,13 +182,25 @@ def index():
                 # If open rates requested, start background task
                 task_id = None
                 if include_open_rates:
+                    # Create a map of tag ID to tag name from available tags
+                    tag_id_to_name = {tag['id']: tag['name'] for tag in tag_options}
+
                     tags_to_analyze = []
                     if facebook_tag:
-                        tags_to_analyze.append({'id': facebook_tag, 'name': 'Facebook Ads'})
+                        tags_to_analyze.append({
+                            'id': facebook_tag,
+                            'name': tag_id_to_name.get(facebook_tag, 'Facebook Ads')
+                        })
                     if creator_tag:
-                        tags_to_analyze.append({'id': creator_tag, 'name': 'Creator Network'})
+                        tags_to_analyze.append({
+                            'id': creator_tag,
+                            'name': tag_id_to_name.get(creator_tag, 'Creator Network')
+                        })
                     if sparkloop_tag:
-                        tags_to_analyze.append({'id': sparkloop_tag, 'name': 'SparkLoop'})
+                        tags_to_analyze.append({
+                            'id': sparkloop_tag,
+                            'name': tag_id_to_name.get(sparkloop_tag, 'SparkLoop')
+                        })
 
                     # Start background task
                     task_id = BackgroundTask.generate_task_id(client_name)

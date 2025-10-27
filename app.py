@@ -104,6 +104,12 @@ def save_client_data():
         return False
 
 
+@app.route('/health')
+def health():
+    """Health check endpoint for Railway."""
+    return jsonify({'status': 'healthy', 'service': 'convertkit-analytics'}), 200
+
+
 @app.route('/', methods=['GET', 'POST'])
 @token_required
 def index():

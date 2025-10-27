@@ -183,7 +183,7 @@ class ReportService:
         if sparkloop_tag:
             tags_to_analyze.append({'id': sparkloop_tag, 'name': 'SparkLoop'})
 
-        open_rate_stats = self.open_rate_service.calculate_open_rates_for_multiple_tags(
+        open_rate_stats = self.open_rate_service.calculate_open_rates_for_tags(
             start_date, end_date, tags_to_analyze
         )
 

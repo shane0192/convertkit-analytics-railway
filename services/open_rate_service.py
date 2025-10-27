@@ -40,11 +40,20 @@ class OpenRateService:
         total_opens = 0
         broadcast_count = 0
 
+        # Store sample stats for debugging
+        sample_stats = None
+
         for broadcast in broadcasts:
             stats = self.ck_service.get_broadcast_stats(broadcast['id'])
             if stats:
+                # Save first stats response for debugging
+                if sample_stats is None:
+                    sample_stats = stats
+                    print(f"SAMPLE STATS RESPONSE: {sample_stats}")
+
                 recipients = stats.get('recipients', 0)
-                opens = stats.get('opens', 0)
+                # Try multiple possible field names for opens
+                opens = stats.get('opens', stats.get('unique_opens', stats.get('total_opens', 0)))
 
                 total_recipients += recipients
                 total_opens += opens
@@ -56,7 +65,8 @@ class OpenRateService:
             'average_open_rate': average_open_rate,
             'total_broadcasts': broadcast_count,
             'total_recipients': total_recipients,
-            'total_opens': total_opens
+            'total_opens': total_opens,
+            'debug_sample_stats': sample_stats  # Include for debugging
         }
 
     def calculate_open_rate_by_tag(self, start_date: str, end_date: str,

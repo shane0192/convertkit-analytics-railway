@@ -111,8 +111,9 @@ class ReportService:
             paid_count = facebook_count + sparkloop_count
             paid_percent = round((paid_count / total_count * 100), 1) if total_count > 0 else 0
 
-            # Get monthly growth data
-            monthly_growth = self._generate_monthly_growth_data(paperboy_start_date)
+            # Get monthly growth data (disabled for now - causes timeouts on large datasets)
+            # monthly_growth = self._generate_monthly_growth_data(paperboy_start_date)
+            monthly_growth = []  # Temporarily disabled to prevent worker timeout
 
             return {
                 'start_date': start_date,

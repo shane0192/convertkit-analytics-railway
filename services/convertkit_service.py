@@ -361,7 +361,8 @@ class ConvertKitService:
         params = {'per_page': PER_PAGE_PARAM}
 
         if filter_type:
-            params['status'] = filter_type
+            params['subscriber_state'] = filter_type
+            print(f"DEBUG: Fetching broadcast {broadcast_id} subscribers with filter '{filter_type}'")
 
         subscribers = []
 
@@ -370,6 +371,7 @@ class ConvertKitService:
         if response.status_code == 200:
             data = response.json()
             subscribers.extend(data.get('subscribers', []))
+            print(f"DEBUG: First page returned {len(data.get('subscribers', []))} subscribers")
 
             # Process subsequent pages
             while data.get('pagination', {}).get('has_next_page'):
@@ -381,5 +383,8 @@ class ConvertKitService:
                 else:
                     print(f"Error getting broadcast subscribers page: {response.text}")
                     break
+        else:
+            print(f"ERROR: Failed to fetch broadcast subscribers. Status: {response.status_code}, Response: {response.text}")
 
+        print(f"DEBUG: Total subscribers fetched for broadcast {broadcast_id} with filter '{filter_type}': {len(subscribers)}")
         return subscribers

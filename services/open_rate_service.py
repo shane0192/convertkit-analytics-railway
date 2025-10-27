@@ -122,6 +122,8 @@ class OpenRateService:
             # Get all recipients for this broadcast
             all_recipients = self.ck_service.get_broadcast_subscribers(broadcast['id'])
             recipient_ids = {sub['id'] for sub in all_recipients}
+            print(f"  - Total recipients fetched: {len(all_recipients)}")
+            print(f"  - Total tagged subscribers we're looking for: {len(tagged_subscriber_ids)}")
 
             # Find intersection: which tagged subscribers received this broadcast
             tag_recipients_for_broadcast = recipient_ids & tagged_subscriber_ids

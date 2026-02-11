@@ -367,6 +367,58 @@ def get_tags():
         return jsonify({'error': str(e)})
 
 
+@app.route('/debug/custom-fields')
+@token_required
+def debug_custom_fields():
+    """Debug endpoint to see all custom fields in recent subscribers."""
+    api_key = session.get('api_key')
+    if not api_key:
+        return jsonify({'error': 'No API key found'})
+
+    try:
+        from datetime import datetime, timedelta
+
+        ck_service = ConvertKitService(api_key, BASE_URL)
+
+        # Get last 30 days of subscribers
+        end_date = datetime.now().strftime('%Y-%m-%d')
+        start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+
+        subscribers = ck_service.get_subscribers(start_date, end_date, count_only=False)
+
+        # Collect all unique custom field names and sample values
+        custom_fields = {}
+        creator_network_samples = []
+
+        for sub in subscribers[:200]:  # Check first 200
+            if 'fields' in sub and sub['fields']:
+                for field_name, field_value in sub['fields'].items():
+                    if field_name not in custom_fields:
+                        custom_fields[field_name] = []
+
+                    if field_value and len(custom_fields[field_name]) < 3:
+                        custom_fields[field_name].append(field_value)
+
+                    # Look for potential Creator Network fields
+                    if field_value and any(keyword in field_name.lower() for keyword in ['creator', 'network', 'recommend', 'referr']):
+                        creator_network_samples.append({
+                            'email': sub.get('email_address'),
+                            'field': field_name,
+                            'value': field_value
+                        })
+
+        return jsonify({
+            'total_subscribers_checked': len(subscribers),
+            'custom_fields': custom_fields,
+            'potential_creator_network_fields': creator_network_samples[:20]
+        })
+
+    except Exception as e:
+        print(f"Error getting custom fields: {str(e)}")
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
+
+
 # Initialize the app (only check environment when running directly, not when imported by gunicorn)
 if __name__ == '__main__':
     check_environment()

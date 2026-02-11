@@ -367,6 +367,46 @@ def get_tags():
         return jsonify({'error': str(e)})
 
 
+@app.route('/debug/subscriber/<email>')
+@token_required
+def debug_subscriber(email):
+    """Debug endpoint to see all data for a specific subscriber."""
+    api_key = session.get('api_key')
+    if not api_key:
+        return jsonify({'error': 'No API key found'})
+
+    try:
+        import requests
+
+        # Search for subscriber by email
+        url = f'{BASE_URL}subscribers'
+        headers = {'Authorization': f'Bearer {api_key}'}
+        params = {'email_address': email}
+
+        response = requests.get(url, headers=headers, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            subscribers = data.get('subscribers', [])
+
+            if subscribers:
+                import json
+                return jsonify({
+                    'found': True,
+                    'subscriber': subscribers[0],
+                    'formatted': json.dumps(subscribers[0], indent=2)
+                })
+            else:
+                return jsonify({'found': False, 'message': 'Subscriber not found'})
+        else:
+            return jsonify({'error': f'API error: {response.status_code}', 'details': response.text})
+
+    except Exception as e:
+        print(f"Error looking up subscriber: {str(e)}")
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
+
+
 @app.route('/debug/custom-fields')
 @token_required
 def debug_custom_fields():
